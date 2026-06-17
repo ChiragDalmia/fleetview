@@ -1,14 +1,28 @@
 import { useState, useEffect, useRef } from "react";
-import type { Vehicle, Alert, Geofence } from "../types";
+import type { Vehicle, Alert, Geofence, GeofenceZone } from "../types";
 
 const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export function useFleetSocket() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [geofence, setGeofence] = useState<Geofence | null>(null);
+  const [allGeofences, setAllGeofences] = useState<GeofenceZone[]>([]);
   const [connected, setConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+
+  // Fetch all geofence zones once
+  useEffect(() => {
+    fetch(`${API_URL}/geofences`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.zones) {
+          setAllGeofences(data.zones);
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch geofences:", err));
+  }, []);
 
   useEffect(() => {
     let closed = false;
@@ -26,9 +40,9 @@ export function useFleetSocket() {
           if (data.geofence) setGeofence(data.geofence);
           setAlerts((prev) => {
             const incoming = (data.alerts as Alert[]).filter(
-              (a) => !prev.some((p) => p.id === a.id)
+              (a) => !prev.some((p) => p.id === a.id),
             );
-            return [...incoming, ...prev].slice(0, 20);
+            return [...incoming, ...prev].slice(0, 30);
           });
         }
       };
@@ -48,5 +62,5 @@ export function useFleetSocket() {
     };
   }, []);
 
-  return { vehicles, alerts, geofence, connected };
+  return { vehicles, alerts, geofence, allGeofences, connected };
 }
