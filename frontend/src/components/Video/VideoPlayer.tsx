@@ -23,7 +23,6 @@ export function VideoPlayer({ streamUrl, vehicleId }: Props) {
       return () => hls.destroy();
     }
 
-    // Safari: native HLS support
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = streamUrl;
       video.play().catch(() => {});
@@ -31,14 +30,24 @@ export function VideoPlayer({ streamUrl, vehicleId }: Props) {
   }, [streamUrl]);
 
   return (
-    <div className="relative bg-black rounded-lg overflow-hidden aspect-video w-full">
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded">
+    <div
+      className="relative bg-black rounded-2xl overflow-hidden aspect-video w-full"
+      style={{ boxShadow: "0 8px 32px rgba(0,0,0,.5)" }}
+    >
+      {/* LIVE badge */}
+      <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
         <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
         LIVE
       </div>
-      <div className="absolute top-2 right-2 z-10 bg-black/60 text-white text-xs px-2 py-0.5 rounded font-mono">
+
+      {/* Vehicle HUD badge */}
+      <div
+        className="absolute top-2.5 right-2.5 z-10 text-white text-xs font-semibold px-2.5 py-1 rounded-full"
+        style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+      >
         {vehicleId}
       </div>
+
       <video ref={videoRef} className="w-full h-full object-cover" muted playsInline controls />
     </div>
   );
