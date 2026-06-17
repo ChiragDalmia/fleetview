@@ -13,7 +13,7 @@ import type { Settings } from "./lib/settings";
 const ONBOARDED_KEY = "fleetview.onboarded";
 
 export default function App() {
-  const { vehicles, alerts, geofence, connected } = useFleetSocket();
+  const { vehicles, alerts, geofence, allGeofences, connected } = useFleetSocket();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [settings, setSettings] = useState<Settings>(loadSettings);
   const [showSettings, setShowSettings] = useState(false);
@@ -46,7 +46,9 @@ export default function App() {
             FV
           </div>
           <h1 className="font-bold text-base tracking-tight">FleetView</h1>
-          <span className="text-gray-600 text-sm hidden sm:block">Fleet Camera Monitor</span>
+          <span className="text-gray-600 text-sm hidden sm:block">
+            Fleet Camera Monitor
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -79,7 +81,6 @@ export default function App() {
 
       {/* Main Layout */}
       <div className="flex-1 flex overflow-hidden">
-
         {/* Left Sidebar */}
         <aside className="w-60 bg-gray-900 border-r border-gray-800 flex flex-col overflow-hidden shrink-0">
           <div className="p-2.5 border-b border-gray-800">
@@ -88,7 +89,11 @@ export default function App() {
             </p>
           </div>
           <div className="flex-1 overflow-y-auto p-2.5">
-            <VehicleList vehicles={vehicles} selectedId={selectedId} onSelect={setSelectedId} />
+            <VehicleList
+              vehicles={vehicles}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
           </div>
           <div className="border-t border-gray-800 p-2.5 max-h-56 overflow-hidden flex flex-col">
             <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">
@@ -105,6 +110,7 @@ export default function App() {
           <FleetMap
             vehicles={vehicles}
             geofence={geofence}
+            allGeofences={allGeofences}
             mapStyle={mapStyleFor(settings)}
             selectedId={selectedId}
             onSelect={setSelectedId}
@@ -133,14 +139,21 @@ export default function App() {
               </button>
             </div>
             <div className="p-3 overflow-y-auto flex-1">
-              <VideoPlayer streamUrl={selected.stream} vehicleId={selected.id} />
+              <VideoPlayer
+                streamUrl={selected.stream}
+                vehicleId={selected.id}
+              />
               <TelemetryCards vehicle={selected} />
               <div className="mt-3 rounded-lg border border-gray-700 bg-gray-800/50 p-3">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Location</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">
+                  Location
+                </p>
                 <p className="text-xs font-mono text-gray-300">
                   {selected.lat.toFixed(5)}, {selected.lng.toFixed(5)}
                 </p>
-                <p className="text-[10px] text-gray-500 mt-1">Toronto GTA Area</p>
+                <p className="text-[10px] text-gray-500 mt-1">
+                  Toronto GTA Area
+                </p>
               </div>
             </div>
           </aside>
