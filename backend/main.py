@@ -7,7 +7,7 @@ import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from data_loader import FleetDataLoader
+from transit_feed import TransitFeed
 from geofence import GeofenceTracker, Polygon, Point
 
 # ── Config ───────────────────────────────────────────────
@@ -28,8 +28,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-TICK_SECONDS = 2
+# The live TTC feed refreshes roughly every 10-20s, so polling faster wastes
+# requests without adding information.
+TICK_SECONDS = int(os.getenv("TICK_SECONDS", "10"))
 MAX_CLIENTS = 50
+SPEEDING_THRESHOLD_KMH = int(os.getenv("SPEEDING_THRESHOLD_KMH", "50"))
 
 # ── Geofence zones (can add multiple) ───────────────────
 DOWNTOWN_CORE = Polygon(
@@ -59,22 +62,13 @@ clients: Set[WebSocket] = set()
 alerts: list = []
 _alert_seq = 0
 
-# Load fleet data from CSV
-loader = FleetDataLoader("fleet_data.csv")
+# Live TTC vehicle positions instead of pre-recorded CSV playback.
+feed = TransitFeed()
 geofence_tracker = GeofenceTracker([DOWNTOWN_CORE, AIRPORT_ZONE])
 
-vehicles = {}
-for vehicle_id in loader.get_all_vehicles():
-    state = loader.get_vehicle_state(vehicle_id)
-    if state:
-        vehicles[vehicle_id] = {
-            "id": state["id"],
-            "lat": state["lat"],
-            "lng": state["lng"],
-            "speed": state["speed"],
-            "status": state["status"],
-            "stream": state["stream"],
-        }
+# vehicle_id -> latest normalized state. Populated by the polling loop;
+# kept across polls so a transient feed outage doesn't blank the map.
+vehicles: dict = {}
 
 
 def add_alert(vehicle_id: str, atype: str, details: str = ""):
@@ -92,36 +86,44 @@ def add_alert(vehicle_id: str, atype: str, details: str = ""):
         alerts.pop(0)
 
 
-def simulate_tick():
-    """Advance all vehicles by one reading from the CSV."""
-    for vehicle_id in list(vehicles.keys()):
-        state = loader.get_vehicle_state(vehicle_id)
-        if not state:
-            continue
+async def refresh_vehicles():
+    """Pull the latest real positions from the live feed and run detections."""
+    snapshot = await feed.fetch()
+    if snapshot is None:
+        # Feed unreachable this tick — keep last known state on the map.
+        return
 
-        vehicles[vehicle_id]["lat"] = state["lat"]
-        vehicles[vehicle_id]["lng"] = state["lng"]
-        vehicles[vehicle_id]["speed"] = state["speed"]
-        vehicles[vehicle_id]["status"] = state["status"]
+    now = datetime.now(timezone.utc).isoformat()
+    seen = set()
 
-        # Check geofence crossings
+    for state in snapshot:
+        vehicle_id = state["id"]
+        seen.add(vehicle_id)
+        vehicles[vehicle_id] = state
+
+        # Check geofence crossings against the real position.
         crossings = geofence_tracker.update(
             vehicle_id=vehicle_id,
             lat=state["lat"],
             lng=state["lng"],
-            timestamp=state["timestamp"].isoformat(),
+            timestamp=now,
         )
 
         for crossing in crossings:
+            entered = crossing.direction == "in"
             add_alert(
                 vehicle_id,
-                f"GEOFENCE_{crossing.direction.upper()}",
-                f"Crossed {crossing.boundary_name}: {crossing.direction}",
+                "GEOFENCE_BREACH",
+                f"{'Entered' if entered else 'Exited'} {crossing.boundary_name}",
             )
 
         # Speed alert
-        if state["speed"] > 90:
+        if state["speed"] > SPEEDING_THRESHOLD_KMH:
             add_alert(vehicle_id, "SPEEDING", f"{state['speed']} km/h")
+
+    # Drop vehicles that left the tracked subset so the map stays current.
+    for stale_id in set(vehicles) - seen:
+        del vehicles[stale_id]
 
 
 async def broadcast(data: dict):
@@ -136,9 +138,9 @@ async def broadcast(data: dict):
 
 
 async def telemetry_loop():
-    """Simulate tick and broadcast every TICK_SECONDS."""
+    """Refresh live positions and broadcast every TICK_SECONDS."""
     while True:
-        simulate_tick()
+        await refresh_vehicles()
         await broadcast({
             "type": "TELEMETRY",
             "vehicles": list(vehicles.values()),
@@ -158,7 +160,14 @@ async def telemetry_loop():
 # ── Routes ───────────────────────────────────────────────
 @app.on_event("startup")
 async def startup():
+    # Prime with one live snapshot so the first client sees real vehicles.
+    await refresh_vehicles()
     asyncio.create_task(telemetry_loop())
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await feed.close()
 
 
 @app.websocket("/ws")
