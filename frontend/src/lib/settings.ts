@@ -22,5 +22,5 @@ export function saveSettings(s: Settings): void {
 export function mapStyleFor(s: Settings): string {
   return s.maptilerKey
     ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${encodeURIComponent(s.maptilerKey)}`
-    : "https://tiles.openfreemap.org/styles/liberty";
+    : "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 }

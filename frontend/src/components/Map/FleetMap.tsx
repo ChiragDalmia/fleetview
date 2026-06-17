@@ -99,29 +99,58 @@ export function FleetMap({
       ))}
 
       {/* Vehicle markers */}
-      {vehicles.map((v) => (
-        <Marker
-          key={v.id}
-          longitude={v.lng}
-          latitude={v.lat}
-          anchor="center"
-          onClick={() => onSelect(v.id)}
-        >
-          <div
-            title={`${v.id} — ${v.speed} km/h`}
-            style={{ cursor: "pointer" }}
+      {vehicles.map((v) => {
+        const isSelected = v.id === selectedId;
+        const isMoving = v.status === "moving";
+        const dotColor = isSelected ? "#1B6EF3" : isMoving ? "#22c55e" : "#f59e0b";
+        const glowColor = isSelected
+          ? "rgba(27,110,243,.65)"
+          : isMoving
+          ? "rgba(34,197,94,.55)"
+          : "rgba(245,158,11,.45)";
+        const dotSize = isSelected ? 18 : 14;
+
+        return (
+          <Marker
+            key={v.id}
+            longitude={v.lng}
+            latitude={v.lat}
+            anchor="center"
+            onClick={() => onSelect(v.id)}
           >
             <div
-              className={`
-                w-4 h-4 rounded-full border-2 border-white shadow-lg transition-all duration-500
-                ${v.id === selectedId ? "scale-150 bg-blue-500" : ""}
-                ${v.id !== selectedId && v.status === "moving" ? "bg-emerald-400" : ""}
-                ${v.id !== selectedId && v.status === "idle" ? "bg-amber-400" : ""}
-              `}
-            />
-          </div>
-        </Marker>
-      ))}
+              title={`${v.id} — ${v.speed} km/h`}
+              style={{ position: "relative", cursor: "pointer", width: dotSize, height: dotSize, display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              {/* Animated pulse ring */}
+              {(isMoving || isSelected) && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: -7,
+                    borderRadius: "50%",
+                    border: `2px solid ${dotColor}`,
+                    animation: "pulse-ring 1.8s ease-out infinite",
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+              {/* Main dot */}
+              <div
+                style={{
+                  width: dotSize,
+                  height: dotSize,
+                  borderRadius: "50%",
+                  background: dotColor,
+                  border: "2.5px solid rgba(255,255,255,0.9)",
+                  boxShadow: `0 0 ${isSelected ? 18 : 10}px ${glowColor}, 0 2px 6px rgba(0,0,0,.6)`,
+                  transition: "all 0.3s ease",
+                }}
+              />
+            </div>
+          </Marker>
+        );
+      })}
     </Map>
   );
 }
