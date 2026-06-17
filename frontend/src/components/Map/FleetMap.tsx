@@ -47,11 +47,23 @@ export function FleetMap({
     properties: { name: zone.name },
   }));
 
+  function onMapLoad(evt: { target: { setPaintProperty: (layer: string, prop: string, value: unknown) => void } }) {
+    const map = evt.target;
+    // Parks are pure black (#0e0e0e) in dark-matter — lift them to a visible dark green
+    map.setPaintProperty("park_national_park", "fill-color", "#162b1f");
+    map.setPaintProperty("park_nature_reserve", "fill-color", "#162b1f");
+    map.setPaintProperty("landuse",             "fill-color", "#162b1f");
+    // Buildings: roof is dark gray (#393939), nudge to a blue-navy so they read against the map
+    map.setPaintProperty("building-top", "fill-color", "#21293d");
+    map.setPaintProperty("building-top", "fill-outline-color", "#19202e");
+  }
+
   return (
     <Map
       initialViewState={{ longitude: -79.41, latitude: 43.67, zoom: 10 }}
       style={{ width: "100%", height: "100%" }}
       mapStyle={mapStyle}
+      onLoad={onMapLoad}
     >
       {/* Primary bounding-box geofence (for compatibility) */}
       {primaryGeofenceData && (
