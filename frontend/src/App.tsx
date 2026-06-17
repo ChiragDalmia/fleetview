@@ -29,7 +29,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen bg-gray-950 text-white flex flex-col overflow-hidden">
+    <div className="h-screen text-white flex flex-col overflow-hidden" style={{ background: "var(--bg-app)" }}>
       {showTutorial && <Tutorial onDone={finishTutorial} />}
       {showSettings && (
         <SettingsModal
@@ -40,13 +40,27 @@ export default function App() {
       )}
 
       {/* Header */}
-      <header className="bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center justify-between shrink-0">
+      <header
+        className="px-5 py-3 flex items-center justify-between shrink-0"
+        style={{
+          background: "var(--bg-panel)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 bg-blue-600 rounded-md flex items-center justify-center text-white text-xs font-black">
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center text-white text-xs font-black"
+            style={{
+              background: "var(--accent)",
+              boxShadow: "0 0 20px rgba(27,110,243,.35)",
+            }}
+          >
             FV
           </div>
-          <h1 className="font-bold text-base tracking-tight">FleetView</h1>
-          <span className="text-gray-600 text-sm hidden sm:block">
+          <h1 className="font-bold text-sm tracking-tight" style={{ color: "var(--text-primary)" }}>
+            FleetView
+          </h1>
+          <span className="text-xs hidden sm:block" style={{ color: "var(--text-muted)" }}>
             Fleet Camera Monitor
           </span>
         </div>
@@ -55,7 +69,13 @@ export default function App() {
           <button
             onClick={() => setShowTutorial(true)}
             title="Tutorial"
-            className="text-gray-500 hover:text-white text-sm w-7 h-7 rounded-md border border-gray-700 hover:border-gray-500 transition-colors flex items-center justify-center"
+            className="text-xs w-7 h-7 rounded-md flex items-center justify-center"
+            style={{
+              color: "var(--text-muted)",
+              border: "1px solid var(--border)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
           >
             ?
           </button>
@@ -63,16 +83,21 @@ export default function App() {
           <button
             onClick={() => setShowSettings(true)}
             title="Settings"
-            className="text-gray-500 hover:text-white w-7 h-7 rounded-md border border-gray-700 hover:border-gray-500 transition-colors flex items-center justify-center"
+            className="w-7 h-7 rounded-md flex items-center justify-center"
+            style={{
+              color: "var(--text-muted)",
+              border: "1px solid var(--border)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
           >
             ⚙
           </button>
 
-          <div className="flex items-center gap-2 text-xs text-gray-400">
+          <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
             <span
-              className={`w-2 h-2 rounded-full ${
-                connected ? "bg-emerald-400 animate-pulse" : "bg-red-400"
-              }`}
+              className={`w-2 h-2 rounded-full ${connected ? "animate-pulse" : ""}`}
+              style={{ background: connected ? "var(--success)" : "var(--danger)" }}
             />
             {connected ? "Live" : "Reconnecting..."}
           </div>
@@ -82,9 +107,15 @@ export default function App() {
       {/* Main Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar */}
-        <aside className="w-60 bg-gray-900 border-r border-gray-800 flex flex-col overflow-hidden shrink-0">
-          <div className="p-2.5 border-b border-gray-800">
-            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+        <aside
+          className="w-56 flex flex-col overflow-hidden shrink-0"
+          style={{
+            background: "var(--bg-panel)",
+            boxShadow: "2px 0 12px rgba(0,0,0,.35)",
+          }}
+        >
+          <div className="px-3 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
               Vehicles ({vehicles.length})
             </p>
           </div>
@@ -95,12 +126,12 @@ export default function App() {
               onSelect={setSelectedId}
             />
           </div>
-          <div className="border-t border-gray-800 p-2.5 max-h-56 overflow-hidden flex flex-col">
-            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">
+          <div className="p-2.5 max-h-56 overflow-hidden flex flex-col" style={{ borderTop: "1px solid var(--border)" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)" }}>
               Alerts
             </p>
             <div className="overflow-y-auto">
-              <AlertLog alerts={alerts} />
+              <AlertLog alerts={alerts} selectedId={selectedId} />
             </div>
           </div>
         </aside>
@@ -117,7 +148,15 @@ export default function App() {
           />
 
           {!selected && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gray-900/90 border border-gray-700 rounded-lg px-4 py-2 text-xs text-gray-400 pointer-events-none">
+            <div
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-xl px-4 py-2 text-xs pointer-events-none"
+              style={{
+                background: "rgba(22,27,39,0.9)",
+                border: "1px solid var(--border)",
+                color: "var(--text-secondary)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
               Click a vehicle dot to view its camera feed →
             </div>
           )}
@@ -125,15 +164,27 @@ export default function App() {
 
         {/* Right Panel — shown only when a vehicle is selected */}
         {selected && (
-          <aside className="w-80 bg-gray-900 border-l border-gray-800 flex flex-col overflow-hidden shrink-0">
-            <div className="p-2.5 border-b border-gray-800 flex items-center justify-between">
-              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+          <aside
+            className="w-80 flex flex-col overflow-hidden shrink-0"
+            style={{
+              background: "var(--bg-panel)",
+              boxShadow: "-2px 0 12px rgba(0,0,0,.35)",
+            }}
+          >
+            <div
+              className="px-3 py-2.5 flex items-center justify-between shrink-0"
+              style={{ borderBottom: "1px solid var(--border)" }}
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
                 Camera Feed
               </p>
               <button
                 onClick={() => setSelectedId(null)}
-                className="text-gray-500 hover:text-white text-lg leading-none transition-colors"
+                className="text-lg leading-none"
                 title="Close panel"
+                style={{ color: "var(--text-muted)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
               >
                 ×
               </button>
@@ -144,14 +195,22 @@ export default function App() {
                 vehicleId={selected.id}
               />
               <TelemetryCards vehicle={selected} />
-              <div className="mt-3 rounded-lg border border-gray-700 bg-gray-800/50 p-3">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">
+
+              {/* Location Card */}
+              <div
+                className="mt-3 rounded-2xl p-3"
+                style={{ background: "var(--bg-card)" }}
+              >
+                <p
+                  className="text-[10px] uppercase tracking-widest mb-2"
+                  style={{ color: "var(--text-muted)" }}
+                >
                   Location
                 </p>
-                <p className="text-xs font-mono text-gray-300">
+                <p className="text-sm font-mono font-semibold" style={{ color: "var(--text-primary)" }}>
                   {selected.lat.toFixed(5)}, {selected.lng.toFixed(5)}
                 </p>
-                <p className="text-[10px] text-gray-500 mt-1">
+                <p className="text-[10px] mt-1" style={{ color: "var(--text-secondary)" }}>
                   Toronto GTA Area
                 </p>
               </div>
