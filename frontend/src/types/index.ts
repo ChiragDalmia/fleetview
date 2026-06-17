@@ -14,6 +14,20 @@ export interface Alert {
   timestamp: string;
 }
 
+export interface TelemetryMessage {
+  type: "TELEMETRY";
+  vehicles: Vehicle[];
+  alerts: Alert[];
+  geofence: {
+    name: string;
+    min_lat: number;
+    max_lat: number;
+    min_lng: number;
+    max_lng: number;
+  };
+  timestamp: string;
+}
+
 export interface Geofence {
   name: string;
   min_lat: number;
@@ -22,10 +36,11 @@ export interface Geofence {
   max_lng: number;
 }
 
-export interface TelemetryMessage {
-  type: "TELEMETRY";
-  vehicles: Vehicle[];
-  alerts: Alert[];
-  geofence: Geofence;
-  timestamp: string;
+export interface GeofenceZone {
+  name: string;
+  vertices: [number, number][]; // [lat, lng] pairs
+}
+
+export interface GeofenceResponse {
+  zones: GeofenceZone[];
 }
