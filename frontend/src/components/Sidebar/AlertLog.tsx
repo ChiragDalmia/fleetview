@@ -1,31 +1,66 @@
 import type { Alert } from "../../types";
 
-const STYLE: Record<Alert["type"], string> = {
-  SPEEDING:        "border-red-700/60    bg-red-900/20    text-red-400",
-  GEOFENCE_BREACH: "border-orange-700/60 bg-orange-900/20 text-orange-400",
-  HARSH_BRAKING:   "border-yellow-700/60 bg-yellow-900/20 text-yellow-400",
+interface Props {
+  alerts: Alert[];
+  selectedId?: string | null;
+}
+
+const STRIPE: Record<Alert["type"], string> = {
+  SPEEDING:        "var(--danger)",
+  GEOFENCE_BREACH: "var(--warning)",
+  HARSH_BRAKING:   "#f97316",
 };
 
 const LABEL: Record<Alert["type"], string> = {
-  SPEEDING:        "⚡ Speeding",
-  GEOFENCE_BREACH: "⚠ Geofence",
+  SPEEDING:        "⚡ Overspeed",
+  GEOFENCE_BREACH: "⚠ Geofence Breach",
   HARSH_BRAKING:   "🔴 Hard Brake",
 };
 
-export function AlertLog({ alerts }: { alerts: Alert[] }) {
-  if (alerts.length === 0) {
-    return <p className="text-gray-600 text-xs text-center py-3">No alerts</p>;
+const TEXT_COLOR: Record<Alert["type"], string> = {
+  SPEEDING:        "var(--danger)",
+  GEOFENCE_BREACH: "var(--warning)",
+  HARSH_BRAKING:   "#f97316",
+};
+
+export function AlertLog({ alerts, selectedId }: Props) {
+  const visible = selectedId
+    ? alerts.filter((a) => a.vehicle_id === selectedId)
+    : alerts;
+
+  if (visible.length === 0) {
+    return (
+      <p className="text-[10px] text-center py-3" style={{ color: "var(--text-muted)" }}>
+        ✓ No active alerts
+      </p>
+    );
   }
 
   return (
     <div className="space-y-1.5">
-      {alerts.map((a) => (
-        <div key={a.id} className={`rounded border px-2.5 py-2 text-xs ${STYLE[a.type]}`}>
-          <div className="flex justify-between items-center">
-            <span className="font-semibold">{LABEL[a.type]}</span>
-            <span className="text-gray-500 text-[10px]">{new Date(a.timestamp).toLocaleTimeString()}</span>
+      {visible.map((a) => (
+        <div
+          key={a.id}
+          className="rounded-xl px-3 py-2.5 relative overflow-hidden"
+          style={{ background: "var(--bg-card)" }}
+        >
+          <div
+            className="absolute left-0 top-0 bottom-0 w-0.5"
+            style={{ background: STRIPE[a.type] }}
+          />
+          <div className="pl-2 flex justify-between items-start">
+            <div>
+              <span className="text-xs font-semibold" style={{ color: TEXT_COLOR[a.type] }}>
+                {LABEL[a.type]}
+              </span>
+              <p className="text-[10px] font-mono mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                {a.vehicle_id}
+              </p>
+            </div>
+            <span className="text-[10px] shrink-0 ml-2" style={{ color: "var(--text-muted)" }}>
+              {new Date(a.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
           </div>
-          <p className="text-gray-400 font-mono text-[10px] mt-0.5">{a.vehicle_id}</p>
         </div>
       ))}
     </div>
