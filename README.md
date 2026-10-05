@@ -1,5 +1,7 @@
 # FleetView
 
+**Case study:** [chiragdalmia.com/projects/fleetview](https://www.chiragdalmia.com/projects/fleetview)
+
 A real-time fleet monitoring dashboard built with React, FastAPI, and MapLibre GL. It pulls live vehicle positions from the TTC (Toronto Transit Commission) via the public umoiq/NextBus feed, runs geofence and speed detection on the backend, and streams everything to connected browsers over WebSocket.
 
 > *Curious how this started? [Read the backstory on LinkedIn](https://www.linkedin.com/posts/chiragdalmia007_today-i-got-curious-about-how-companies-like-ugcPost-7473171257904259072-kjkb/).*
